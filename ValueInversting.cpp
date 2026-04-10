@@ -33,6 +33,7 @@ CValueInverstingApp::CValueInverstingApp()
 
 // 唯一的 CValueInverstingApp 对象
 
+ULONG_PTR gdiplusToken;
 CValueInverstingApp theApp;
 
 
@@ -51,7 +52,12 @@ BOOL CValueInverstingApp::InitInstance()
 	InitCommonControlsEx(&InitCtrls);
 
 	CWinApp::InitInstance();
-
+	GdiplusStartupInput gdiplusStartupInput;
+	if (GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL) != Ok)
+	{
+		AfxMessageBox(_T("GDI+ 初始化失败，程序将退出"));
+		return FALSE;
+	}
 
 	AfxEnableControlContainer();
 
@@ -89,7 +95,8 @@ BOOL CValueInverstingApp::InitInstance()
 		TRACE(traceAppMsg, 0, "警告: 对话框创建失败，应用程序将意外终止。\n");
 		TRACE(traceAppMsg, 0, "警告: 如果您在对话框上使用 MFC 控件，则无法 #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS。\n");
 	}
-
+	// 对话框已关闭，关闭 GDI+
+	GdiplusShutdown(gdiplusToken);
 	// 删除上面创建的 shell 管理器。
 	if (pShellManager != nullptr)
 	{
@@ -99,9 +106,16 @@ BOOL CValueInverstingApp::InitInstance()
 #if !defined(_AFXDLL) && !defined(_AFX_NO_MFC_CONTROLS_IN_DIALOGS)
 	ControlBarCleanUp();
 #endif
-
 	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
 	//  而不是启动应用程序的消息泵。
 	return FALSE;
 }
 
+
+
+int CValueInverstingApp::ExitInstance()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	GdiplusShutdown(gdiplusToken);
+	return CWinApp::ExitInstance();
+}

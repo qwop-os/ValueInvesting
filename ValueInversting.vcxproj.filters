@@ -33,6 +33,12 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingBalanceSheetDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ValueInversting.cpp">
@@ -42,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingBalanceSheetDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -54,10 +63,66 @@
     <None Include="res\ValueInversting.rc2">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="BydBalanceSheet2025.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="贵州茅台资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="指南针资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="藏格矿业资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="东方财富资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="东鹏饮料资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="福耀玻璃资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="海尔智家资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="海天味业资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="美的集团资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="珀莱雅资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="同花顺资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="云南白药资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="中国电信资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="中国人寿资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="中国移动资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="中信证券资产负债表.json">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ValueInversting.ico">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt">
+      <Filter>源文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -94,6 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -188,8 +189,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SettingBalanceSheetDlg.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ValueInversting.h" />
     <ClInclude Include="ValueInverstingDlg.h" />
@@ -201,6 +204,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SettingBalanceSheetDlg.cpp" />
     <ClCompile Include="ValueInversting.cpp" />
     <ClCompile Include="ValueInverstingDlg.cpp" />
   </ItemGroup>
@@ -208,10 +212,30 @@
     <ResourceCompile Include="ValueInversting.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BydBalanceSheet2025.json" />
     <None Include="res\ValueInversting.rc2" />
+    <None Include="东方财富资产负债表.json" />
+    <None Include="东鹏饮料资产负债表.json" />
+    <None Include="中信证券资产负债表.json" />
+    <None Include="中国人寿资产负债表.json" />
+    <None Include="中国电信资产负债表.json" />
+    <None Include="中国移动资产负债表.json" />
+    <None Include="云南白药资产负债表.json" />
+    <None Include="同花顺资产负债表.json" />
+    <None Include="指南针资产负债表.json" />
+    <None Include="海天味业资产负债表.json" />
+    <None Include="海尔智家资产负债表.json" />
+    <None Include="珀莱雅资产负债表.json" />
+    <None Include="福耀玻璃资产负债表.json" />
+    <None Include="美的集团资产负债表.json" />
+    <None Include="藏格矿业资产负债表.json" />
+    <None Include="贵州茅台资产负债表.json" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ValueInversting.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

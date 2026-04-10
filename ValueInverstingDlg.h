@@ -6,6 +6,15 @@
 
 #include<map>
 #include<vector>
+#include<set>
+#include <fstream>
+#include <string>
+#include "json.hpp"
+
+
+using namespace std;
+using json = nlohmann::json;
+using std::set;
 using std::map;
 using std::vector;
 // CValueInverstingDlg 对话框
@@ -15,10 +24,20 @@ class CValueInverstingDlg : public CDialogEx
 public:
 	CValueInverstingDlg(CWnd* pParent = nullptr);	// 标准构造函数
 	void InitDebtVal();
+	void InitDebtValVis();
 	void InitFont(LOGFONT*lpfont);
 	void InitMaxMin();
 	double GetValueByPoint(CPoint pt);
 	CString GetNameByPoint(CPoint pt);
+	int ReadJsonFile();
+	void traverse_and_update(const json& j, const CString& path);
+	void SetWindowTitle(CString strTitle);
+	void LoadData(CString strFilePath); // 从指定 JSON 文件加载数据并刷新界面
+	void DrawLineDot(CDC&dc);
+	void DrawLeftCursor(CDC&dc);
+	void GetClrBrush(CPoint pt);
+	void CalLeftCursorPos(CDC&dc,CPoint pt);
+	void CalTipPos(CDC&dc, CPoint pt);
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_VALUEINVERSTING_DIALOG };
@@ -37,19 +56,34 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnFileOpen();          // 响应“打开文件”命令
 	DECLARE_MESSAGE_MAP()
 private:
-	map<CString,double>m_mpDebt;
-	map<CString, double>m_mpVal;
-	vector<std::pair<CString,double>>m_vNameValue;
+	map<CString,map<CString,double>>m_mpDebt;
+	map<CString, map<CString, double>>m_mpVal;
+	map<CString, double>m_mpValVis;// 显示mapval
+	map<CString, double>m_mpDebtVis;//
+	vector<std::pair<CString, double>>m_vNameValue;
 	CFont m_font;
 	double m_dbMax{ 1.0f };
 	double m_dbMin{0.0f};
 	CRect m_rcDraw;
-	CRect m_rcToolTip;
+	CRect m_rcCurToolTip;   // 当前提示框区域
+	CRect m_rcOldToolTip;   // 上一帧提示框区域（用于计算脏矩形）
+	CRect m_rcCurLeftCursor;// 左侧当前cursor区域。
+	CRect m_rcOldLeftCursor;
 	int m_iRealWidthPillar{ 10 };
-	int m_iLeftStartX{ 30 };
-	int m_iBold{ 30 };
+	int m_iLeftStartX{ 40 };
+	int m_iBold{ 46 };
+	CString m_strTitle;
+	CString m_strTips;
+	CString m_strLeftCursor;
+	BOOL m_bTrackingMouse{FALSE};
+	CMenu m_menu;                       // 菜单对象
+	int m_iLeftLinePosx;				//左侧竖线位置
+	COLORREF m_brushCircleClr;			//tip 圆圈
 public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnMouseLeave();
 };

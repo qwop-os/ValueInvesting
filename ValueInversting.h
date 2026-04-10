@@ -27,6 +27,7 @@ public:
 // 实现
 
 	DECLARE_MESSAGE_MAP()
+	virtual int ExitInstance();
 };
 
 extern CValueInverstingApp theApp;

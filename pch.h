@@ -9,5 +9,8 @@
 
 // 添加要在此处预编译的标头
 #include "framework.h"
-
+#include <gdiplus.h>
+#include <afxcontrolbars.h>
+#pragma comment(lib, "gdiplus.lib")
+using namespace Gdiplus;
 #endif //PCH_H
