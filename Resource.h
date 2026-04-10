@@ -7,8 +7,15 @@
 #define IDD_VALUEINVERSTING_DIALOG      102
 #define IDR_MAINFRAME                   128
 #define IDR_MENU1                       131
-#define IDD_DIALOG1                     133
 #define IDD_SETTING_BALANCESHEET        133
+#define IDC_TAB1                        1001
+#define IDC_LIST_CATEGORY               1002
+#define IDC_LIST_FIELDS                 1003
+#define IDC_BTN_ADD                     1004
+#define IDC_BTN_DEL                     1005
+#define IDC_BTN_RENAME                  1006
+#define IDC_SettingChange               1007
+#define IDC_SettingOwner                1007
 #define ID_32771                        32771
 #define ID_Menu                         32772
 #define ID_32773                        32773
@@ -19,7 +26,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

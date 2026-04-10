@@ -38,6 +38,16 @@ public:
 	void GetClrBrush(CPoint pt);
 	void CalLeftCursorPos(CDC&dc,CPoint pt);
 	void CalTipPos(CDC&dc, CPoint pt);
+	// ValueInverstingDlg.h 类内添加
+	void LoadConfig();          // 从文件加载配置，若不存在则生成默认配置
+	void SaveConfig();          // 保存配置到文件
+	void ApplyConfigToMaps();   // 根据配置重建 m_mpVal / m_mpDebt 结构
+	void RebuildFieldMappings();
+	void OnSettings();
+public:
+	BalanceSheetConfig m_config;
+	std::map<CString, CString> m_assetFieldToCategory;
+	std::map<CString, CString> m_liabilityFieldToCategory;
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_VALUEINVERSTING_DIALOG };
@@ -86,4 +96,5 @@ private:
 public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnMouseLeave();
+	afx_msg void OnBnClickedSettingowner();
 };

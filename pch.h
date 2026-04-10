@@ -13,4 +13,23 @@
 #include <afxcontrolbars.h>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
+#include <vector>
+// 单个一级类别配置
+struct CategoryItem {
+	CString name;                   // 一级显示名称（用户自定义）
+	std::vector<CString> fields;    // 包含的二级字段键名（如 "cash", "accounts_receivable"）
+};
+
+// 整体配置
+struct BalanceSheetConfig {
+	std::vector<CategoryItem> assetCategories;      // 资产类（流动资产+非流动资产）
+	std::vector<CategoryItem> liabilityCategories;  // 负债类（流动负债+非流动负债）
+};
+
+struct FieldMeta {
+	CString key;            // JSON 中的字段名
+	CString display;        // 中文显示名称
+	CString section;        // 所属节："current_assets", "non_current_assets", "current_liabilities", "non_current_liabilities"
+	bool isTotalObject;     // 是否为嵌套对象（需要取 total）
+};
 #endif //PCH_H

@@ -11,7 +11,7 @@
 #include <fstream>
 #include <string>
 #include "json.hpp"
-
+#include "SettingBalanceSheetDlg.h"
 using namespace std;
 using json = nlohmann::json;
 #ifdef _DEBUG
@@ -72,85 +72,31 @@ void CValueInverstingDlg::traverse_and_update(const json& j, const CString& path
 		}
 	}
 	else if (j.is_number()) {
-		long long val_k = get_safe_value(j);   // 单位：千元
-		double val_yi = val_k / 1e8;      // 转换为亿元
+		long long val_k = get_safe_value(j);
+		double val_yi = val_k / 1e8;
 
-		// 根据路径更新对应的 map
-		// 使用 CString 的 Find 方法判断前缀
-		if (path.Find(_T("balance_sheet.current_assets")) == 0) {
-			// 流动资产 -> 更新 m_mpVal
-			int lastDot = path.ReverseFind('.');
-			CString field_name = (lastDot == -1) ? path : path.Mid(lastDot + 1);
+		// 解析路径最后一段字段名
+		int lastDot = path.ReverseFind('.');
+		CString fieldName = (lastDot == -1) ? path : path.Mid(lastDot + 1);
+		// 处理数组索引 [n] 后缀
+		int bracket = fieldName.Find('[');
+		if (bracket != -1)
+			fieldName = fieldName.Left(bracket);
 
-			if (field_name == _T("cash") || field_name == _T("settlement_reserve") || field_name == _T("trading_financial_assets")) {
-				m_mpVal[_T("现金")][field_name] = val_yi;
-			}
-			else if (field_name == _T("notes_receivable") || field_name == _T("accounts_receivable") ||
-				field_name == _T("receivables_financing") || field_name == _T("other_receivables") ||
-				field_name == _T("reverse_repurchase_agreements")) {
-				m_mpVal[_T("应收款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("prepayments")) {
-				m_mpVal[_T("预付款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("inventories")) {
-				m_mpVal[_T("存货")][field_name] = val_yi;
-			}
-			else if (field_name == _T("non_current_assets_due_within_one_year") || field_name == _T("other_current_assets")) {
-				m_mpVal[_T("其他流动性资产")][field_name] = val_yi;
-			}
+		// 判断属于资产还是负债（根据路径前缀）
+		if (path.Find("balance_sheet.current_assets") == 0 ||
+			path.Find("balance_sheet.non_current_assets") == 0)
+		{
+			auto it = m_assetFieldToCategory.find(fieldName);
+			if (it != m_assetFieldToCategory.end())
+				m_mpVal[it->second][fieldName] = val_yi;
 		}
-		else if (path.Find(_T("balance_sheet.non_current_assets")) == 0) {
-			int lastDot = path.ReverseFind('.');
-			CString field_name = (lastDot == -1) ? path : path.Mid(lastDot + 1);
-
-			if (field_name == _T("debt_investments") || field_name == _T("long_term_receivables") || field_name == _T("long_term_equity_investments")) {
-				m_mpVal[_T("长期投资")][field_name] = val_yi;
-			}
-			else if (field_name == _T("fixed_assets") || field_name == _T("construction_in_progress")) {
-				m_mpVal[_T("固定资产")][field_name] = val_yi;
-			}
-			else if (field_name == _T("biological_assets") || field_name == _T("right_of_use_assets") ||
-				field_name == _T("intangible_assets") || field_name == _T("goodwill")) {
-				m_mpVal[_T("无形资产&商誉")][field_name] = val_yi;
-			}
-			else if (field_name == _T("long_term_deferred_expenses") || field_name == _T("deferred_tax_assets") ||
-				field_name == _T("other_non_current_assets")) {
-				m_mpVal[_T("其他非流动性资产")][field_name] = val_yi;
-			}
-		}
-		else if (path.Find(_T("balance_sheet.current_liabilities")) == 0) {
-			int lastDot = path.ReverseFind('.');
-			CString field_name = (lastDot == -1) ? path : path.Mid(lastDot + 1);
-
-			if (field_name == _T("short_term_borrowings") || field_name == _T("non_current_liabilities_due_within_one_year")) {
-				m_mpDebt[_T("短期借款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("notes_payable") || field_name == _T("accounts_payable") || field_name == _T("other_payables")) {
-				m_mpDebt[_T("应付款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("advance_from_customers") || field_name == _T("contract_liabilities")) {
-				m_mpDebt[_T("预收款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("employee_benefits_payable") || field_name == _T("taxes_payable")) {
-				m_mpDebt[_T("薪酬&税")][field_name] = val_yi;
-			}
-			else if (field_name == _T("other_current_liabilities")) {
-				// 注意：一年内到期的非流动负债已经在短期借款中处理，这里单独处理“其他”
-				m_mpDebt[_T("其他流动性负债")][_T("other")] = val_yi;
-			}
-		}
-		else if (path.Find(_T("balance_sheet.non_current_liabilities")) == 0) {
-			int lastDot = path.ReverseFind('.');
-			CString field_name = (lastDot == -1) ? path : path.Mid(lastDot + 1);
-
-			if (field_name == _T("long_term_borrowings") || field_name == _T("bonds_payable")) {
-				m_mpDebt[_T("长期借款")][field_name] = val_yi;
-			}
-			else if (field_name == _T("lease_liabilities") || field_name == _T("long_term_accounts_payable") ||
-				field_name == _T("deferred_tax_liabilities") || field_name == _T("other_non_current_liabilities")) {
-				m_mpDebt[_T("其他非流动性负债")][field_name] = val_yi;
-			}
+		else if (path.Find("balance_sheet.current_liabilities") == 0 ||
+			path.Find("balance_sheet.non_current_liabilities") == 0)
+		{
+			auto it = m_liabilityFieldToCategory.find(fieldName);
+			if (it != m_liabilityFieldToCategory.end())
+				m_mpDebt[it->second][fieldName] = val_yi;
 		}
 	}
 	else if (j.is_array()) {
@@ -161,6 +107,19 @@ void CValueInverstingDlg::traverse_and_update(const json& j, const CString& path
 		}
 	}
 	// 其他类型（字符串、布尔等）忽略
+}
+
+void CValueInverstingDlg::OnSettings()
+{
+	CSettingBalanceSheetDlg dlg;
+	dlg.SetConfig(&m_config);   // 传入配置引用
+	if (dlg.DoModal() == IDOK) {
+		SaveConfig();
+		ApplyConfigToMaps();
+		RebuildFieldMappings();
+		InitMaxMin();
+		Invalidate();
+	}
 }
 
 // 修改后的 ReadJsonFile 函数
@@ -348,6 +307,7 @@ BEGIN_MESSAGE_MAP(CValueInverstingDlg, CDialogEx)
 	ON_WM_ERASEBKGND()
 	ON_WM_MOUSELEAVE()
 	ON_COMMAND(ID_FILE_OPEN, &CValueInverstingDlg::OnFileOpen)
+	ON_BN_CLICKED(IDC_SettingOwner, &CValueInverstingDlg::OnBnClickedSettingowner)
 END_MESSAGE_MAP()
 
 
@@ -356,6 +316,100 @@ END_MESSAGE_MAP()
 BOOL CValueInverstingDlg::OnEraseBkgnd(CDC* pDC)
 {
 	return TRUE;  // 禁止默认背景擦除
+}
+
+void CValueInverstingDlg::LoadConfig()
+{
+	std::ifstream file("BalanceSheetConfig.json");
+	if (!file.is_open())
+	{
+		// 使用默认配置（即你代码中硬编码的结构）
+		// 此处可调用一个生成默认配置的函数
+		return;
+	}
+
+	json j;
+	file >> j;
+	m_config.assetCategories.clear();
+	m_config.liabilityCategories.clear();
+
+	auto loadVec = [](const json& arr, std::vector<CategoryItem>& vec) {
+		for (auto& item : arr) {
+			CategoryItem cat;
+			cat.name = item["name"].get<std::string>().c_str();
+			for (auto& f : item["fields"])
+				cat.fields.push_back(f.get<std::string>().c_str());
+			vec.push_back(cat);
+		}
+	};
+	if (j.contains("assetCategories"))
+		loadVec(j["assetCategories"], m_config.assetCategories);
+	if (j.contains("liabilityCategories"))
+		loadVec(j["liabilityCategories"], m_config.liabilityCategories);
+}
+
+void CValueInverstingDlg::ApplyConfigToMaps()
+{
+	m_mpVal.clear();
+	m_mpDebt.clear();
+
+	for (auto& cat : m_config.assetCategories) {
+		std::map<CString, double> inner;
+		for (auto& f : cat.fields)
+			inner[f] = 0.0;
+		m_mpVal[cat.name] = inner;
+	}
+	for (auto& cat : m_config.liabilityCategories) {
+		std::map<CString, double> inner;
+		for (auto& f : cat.fields)
+			inner[f] = 0.0;
+		m_mpDebt[cat.name] = inner;
+	}
+
+	// 如果没有配置（文件缺失），使用默认配置
+	if (m_mpVal.empty() && m_mpDebt.empty()) {
+		// 此处填充你代码中的默认结构，并同步到 m_config
+		// 略...
+	}
+
+	InitDebtValVis();  // 重建可视化数据
+}
+
+void CValueInverstingDlg::RebuildFieldMappings()
+{
+    m_assetFieldToCategory.clear();
+    m_liabilityFieldToCategory.clear();
+
+    for (auto& cat : m_config.assetCategories) {
+        for (auto& f : cat.fields)
+            m_assetFieldToCategory[f] = cat.name;
+    }
+    for (auto& cat : m_config.liabilityCategories) {
+        for (auto& f : cat.fields)
+            m_liabilityFieldToCategory[f] = cat.name;
+    }
+}
+
+void CValueInverstingDlg::SaveConfig()
+{
+	json j;
+	auto saveVec = [](json& arr, const std::vector<CategoryItem>& vec) {
+		arr = json::array();
+		for (auto& cat : vec) {
+			json item;
+			item["name"] = CT2A(cat.name);
+			json fields = json::array();
+			for (auto& f : cat.fields)
+				fields.push_back(CT2A(f));
+			item["fields"] = fields;
+			arr.push_back(item);
+		}
+	};
+	saveVec(j["assetCategories"], m_config.assetCategories);
+	saveVec(j["liabilityCategories"], m_config.liabilityCategories);
+
+	std::ofstream file("BalanceSheetConfig.json");
+	file << j.dump(4);
 }
 
 void CValueInverstingDlg::LoadData(CString strFilePath)
@@ -821,4 +875,11 @@ void CValueInverstingDlg::OnMouseMove(UINT nFlags, CPoint point)
 		}
 	}
 	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+
+void CValueInverstingDlg::OnBnClickedSettingowner()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnSettings();
 }
