@@ -14,6 +14,7 @@
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
 #include <vector>
+#include <afxcontrolbars.h>
 // 单个一级类别配置
 struct CategoryItem {
 	CString name;                   // 一级显示名称（用户自定义）

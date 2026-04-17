@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "framework.h"
 #include "SettingBalanceSheetDlg.h"
+#include "CValorDebtDlg.h"
 #include "afxdialogex.h"
 #include <set>
 
@@ -47,35 +48,6 @@ void CSettingBalanceSheetDlg::SetConfig(BalanceSheetConfig* pConfig)
 	m_pConfig = pConfig;
 }
 
-BOOL CSettingBalanceSheetDlg::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
-{
-	NMHDR* pNMHDR = reinterpret_cast<NMHDR*>(lParam);
-
-	// 判断通知是否来自 Tab 控件（或其内部子窗口）
-	// 方法：检查发送窗口的顶级父窗口是否为我们的 Tab 控件
-	HWND hWndFrom = pNMHDR->hwndFrom;
-	if (::IsChild(m_tab.GetSafeHwnd(), hWndFrom))
-	{
-		// 直接比较 code 是否为 TCN_SELCHANGE（注意数值常量）
-		// 或者使用 TCN_SELCHANGE 宏（编译器会正确求值）
-		if (pNMHDR->code == 0xFFFFFD2E)
-		{
-			int nSel = m_tab.GetCurSel();
-			if (nSel != m_nCurTab)
-			{
-				m_nCurTab = nSel;
-				m_pCurrVec = (m_nCurTab == 0) ? &m_pConfig->assetCategories : &m_pConfig->liabilityCategories;
-				OnTabChanged();
-			}
-			*pResult = 0;
-			return TRUE; // 消息已处理
-		}
-	}
-
-	// 其他消息交给基类处理
-	return CDialogEx::OnNotify(wParam, lParam, pResult);
-}
-
 BOOL CSettingBalanceSheetDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -95,7 +67,7 @@ BOOL CSettingBalanceSheetDlg::OnInitDialog()
 	OnTabChanged();
 	return TRUE;
 }
-
+// 点击切换的资产、负债触发，切换前一个、后一个按钮不触发。（前一个、后一个按钮触发的是UDN_DELTAPOS ）
 void CSettingBalanceSheetDlg::OnTcnSelchangeTab1(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	int nSel = m_tab.GetCurSel();
@@ -205,6 +177,7 @@ void CSettingBalanceSheetDlg::OnLbnSelchangeListCategory()
 
 void CSettingBalanceSheetDlg::OnBnClickedBtnAdd()
 {
+
 	// 弹出输入框让用户输入新类别名称
 	CString strNewName;
 	// 使用简易输入对话框（可用 CInputDialog 或自定义）
@@ -212,21 +185,28 @@ void CSettingBalanceSheetDlg::OnBnClickedBtnAdd()
 	// 这里用简单对话框示意
 	// 若需要完整代码，可自行实现 CInputDlg
 	// 简化：直接默认名称
-	strNewName = _T("新类别");
-
-	if (!strNewName.IsEmpty())
+	CValorDebtDlg dlgValDebt(m_nCurTab);
+	if (dlgValDebt.DoModal() == IDOK)
 	{
-		CategoryItem newCat;
-		newCat.name = strNewName;
-		m_pCurrVec->push_back(newCat);
-		LoadCategoriesToList();
-		int nNewIndex = (int)m_pCurrVec->size() - 1;
-		m_listCategory.SetCurSel(nNewIndex);
-		m_nSelCategory = nNewIndex;
-		LoadFieldsToList(nNewIndex);
-		m_btnDel.EnableWindow(TRUE);
-		m_btnRename.EnableWindow(TRUE);
-	}
+		strNewName = dlgValDebt.m_strname;
+		if (!strNewName.IsEmpty())
+		{
+			CategoryItem newCat;
+			newCat.name = strNewName;
+			m_pCurrVec->push_back(newCat);
+			LoadCategoriesToList();
+			int nNewIndex = (int)m_pCurrVec->size() - 1;
+			m_listCategory.SetCurSel(nNewIndex);
+			m_nSelCategory = nNewIndex;
+			LoadFieldsToList(nNewIndex);
+			m_btnDel.EnableWindow(TRUE);
+			m_btnRename.EnableWindow(TRUE);
+		}
+		else
+		{
+			MessageBox("未输入名字");
+		}
+	};
 }
 
 void CSettingBalanceSheetDlg::OnBnClickedBtnDel()
@@ -257,14 +237,18 @@ void CSettingBalanceSheetDlg::OnBnClickedBtnRename()
 	if (m_nSelCategory >= 0 && m_nSelCategory < (int)m_pCurrVec->size())
 	{
 		// 弹出输入框修改名称，此处简化
-		CString strNewName;
-		strNewName = _T("重命名类别");
-
-		if (!strNewName.IsEmpty())
+		CValorDebtDlg dlgValDebt(m_nCurTab);
+		if (dlgValDebt.DoModal() == IDOK)
 		{
-			(*m_pCurrVec)[m_nSelCategory].name = strNewName;
-			LoadCategoriesToList();
-			m_listCategory.SetCurSel(m_nSelCategory);
+			CString strNewName;
+			strNewName = dlgValDebt.m_strname;
+
+			if (!strNewName.IsEmpty())
+			{
+				(*m_pCurrVec)[m_nSelCategory].name = strNewName;
+				LoadCategoriesToList();
+				m_listCategory.SetCurSel(m_nSelCategory);
+			}
 		}
 	}
 }
