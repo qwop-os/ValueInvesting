@@ -188,6 +188,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CMyCheckListBox.h" />
     <ClInclude Include="CValorDebtDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="json.hpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="ValueInverstingDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CMyCheckListBox.cpp" />
     <ClCompile Include="CValorDebtDlg.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

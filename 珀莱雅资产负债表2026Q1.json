@@ -41,21 +41,21 @@
         "non_current_assets_due_within_one_year": "一年内到期的非流动资产",
         "other_current_assets": "其他流动资产"
       },
-      "cash": 5060981558.27,
+      "cash": 4751189035.34,
       "settlement_reserve": null,
       "funds_lent": null,
       "margin_financing": null,
-      "trading_financial_assets": null,
+      "trading_financial_assets": 323742610.23,
       "derivative_financial_assets": null,
       "notes_receivable": null,
-      "accounts_receivable": 70150618.87,
-      "receivables_financing": 2491804.24,
-      "prepayments": 169434798.38,
+      "accounts_receivable": 315331606.70,
+      "receivables_financing": 4331974.24,
+      "prepayments": 286485166.84,
       "premiums_receivable": null,
       "reinsurance_receivables": null,
       "reinsurance_contract_reserves": null,
       "other_receivables": {
-        "total": 31038260.10,
+        "total": 10276109.74,
         "details": {
           "interest_receivable": null,
           "dividends_receivable": 20000000.00
@@ -64,13 +64,13 @@
       "reverse_repurchase_agreements": null,
       "deposit_guarantee": null,
       "inventories": {
-        "total": 634717582.47,
+        "total": 678168914.47,
         "data_resources": null
       },
       "contract_assets": null,
       "held_for_sale_assets": null,
       "non_current_assets_due_within_one_year": null,
-      "other_current_assets": 167604306.60
+      "other_current_assets": 129014224.01
     },
     "non_current_assets": {
       "_comment": "非流动资产",
@@ -99,24 +99,24 @@
       "debt_investments": null,
       "other_debt_investments": null,
       "long_term_receivables": null,
-      "long_term_equity_investments": 441303737.68,
+      "long_term_equity_investments": 500145386.97,
       "other_equity_instruments_investments": 78767098.06,
       "other_non_current_financial_assets": null,
-      "investment_properties": 62924414.65,
-      "fixed_assets": 893123172.84,
-      "construction_in_progress": 128341121.16,
+      "investment_properties": 62790067.48,
+      "fixed_assets": 871272823.12,
+      "construction_in_progress": 148784750.68,
       "biological_assets": null,
       "oil_and_gas_assets": null,
-      "right_of_use_assets": 27117353.69,
+      "right_of_use_assets": 25159085.66,
       "intangible_assets": {
-        "total": 443885112.10,
+        "total": 440475393.25,
         "data_resources": null
       },
       "development_expenditure": null,
       "goodwill": null,
-      "long_term_deferred_expenses": 110663098.70,
-      "deferred_tax_assets": 149070224.51,
-      "other_non_current_assets": 15801977.93
+      "long_term_deferred_expenses": 98881645.81,
+      "deferred_tax_assets": 172845038.47,
+      "other_non_current_assets": 14464457.63
     },
     "current_liabilities": {
       "_comment": "流动负债",
@@ -151,17 +151,17 @@
       "trading_financial_liabilities": null,
       "derivative_financial_liabilities": null,
       "notes_payable": null,
-      "accounts_payable": 798463950.20,
-      "advance_from_customers": 345362.16,
-      "contract_liabilities": 167287402.83,
+      "accounts_payable": 881915464.36,
+      "advance_from_customers": 329059.04,
+      "contract_liabilities": 159466906.96,
       "repurchase_agreements": null,
       "deposits_and_interbank_placements": null,
       "securities_trading_payable": null,
       "underwriting_securities_payable": null,
-      "employee_benefits_payable": 161389606.41,
-      "taxes_payable": 94748550.72,
+      "employee_benefits_payable": 96176911.69,
+      "taxes_payable": 211022053.15,
       "other_payables": {
-        "total": 45208485.79,
+        "total": 42896273.53,
         "details": {
           "interest_payable": null,
           "dividends_payable": null
@@ -170,8 +170,8 @@
       "commissions_and_fees_payable": null,
       "reinsurance_payables": null,
       "held_for_sale_liabilities": null,
-      "non_current_liabilities_due_within_one_year": 7738217.76,
-      "other_current_liabilities": 18877890.19
+      "non_current_liabilities_due_within_one_year": 8323740.36,
+      "other_current_liabilities": 29369025.41
     },
     "non_current_liabilities": {
       "_comment": "非流动负债",
@@ -190,17 +190,17 @@
       "insurance_contract_reserves": null,
       "long_term_borrowings": null,
       "bonds_payable": {
-        "total": 804392073.95,
+        "total": 813437206.78,
         "details": {
           "preferred_stock": null,
           "perpetual_bonds": null
         }
       },
-      "lease_liabilities": 19709565.95,
+      "lease_liabilities": 18207332.11,
       "long_term_accounts_payable": null,
       "long_term_employee_benefits_payable": null,
       "provisions": null,
-      "deferred_income": 22680204.91,
+      "deferred_income": 22253815.99,
       "deferred_tax_liabilities": null,
       "other_non_current_liabilities": null
     },
@@ -220,28 +220,28 @@
         "non_controlling_interests": "少数股东权益",
         "total_equity": "所有者权益合计"
       },
-      "share_capital": 395975998.00,
+      "share_capital": 395976008.00,
       "other_equity_instruments": {
         "preferred_stock": null,
-        "perpetual_bonds": 50890120.00
+        "perpetual_bonds": 50890052.21
       },
-      "capital_reserve": 825300520.47,
-      "treasury_stock": -192144659.13,
-      "other_comprehensive_income": -67081795.57,
+      "capital_reserve": 825301658.81,
+      "treasury_stock": -293165449.58,
+      "other_comprehensive_income": -67627936.57,
       "special_reserve": null,
       "surplus_reserve": 198411582.50,
       "general_risk_reserve": null,
-      "retained_earnings": 4929703337.30,
-      "equity_attributable_to_parent": 6141055103.57,
-      "non_controlling_interests": 125467025.81,
-      "total_equity": 6266522129.38
+      "retained_earnings": 5296390071.44,
+      "equity_attributable_to_parent": 6406175986.81,
+      "non_controlling_interests": 142498812.51,
+      "total_equity": 6548674799.32
     },
-    "current_assets_total": 6136418928.93,
-    "non_current_assets_total": 2350997311.32,
-    "current_liabilities_total": 1374112266.06,
-    "non_current_liabilities_total": 846781844.81,
-    "total_assets": 8487416240.25,
-    "total_liabilities": 2220894110.87,
-    "total_liabilities_and_equity": 8487416240.25
+    "current_assets_total": 6498539641.57,
+    "non_current_assets_total": 2413585747.13,
+    "current_liabilities_total": 1509552234.50,
+    "non_current_liabilities_total": 853898354.88,
+    "total_assets": 8912125388.70,
+    "total_liabilities": 2363450589.38,
+    "total_liabilities_and_equity": 8912125388.70
   }
 }

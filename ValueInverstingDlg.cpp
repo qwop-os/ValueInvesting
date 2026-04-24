@@ -17,7 +17,7 @@ using json = nlohmann::json;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
+extern const std::vector<FieldMeta> g_AllFields; // 全局字段元数据
 
 
 CValueInverstingDlg::CValueInverstingDlg(CWnd* pParent /*=nullptr*/)
@@ -109,14 +109,102 @@ void CValueInverstingDlg::traverse_and_update(const json& j, const CString& path
 	// 其他类型（字符串、布尔等）忽略
 }
 
+void CValueInverstingDlg::CalWindowSize()
+{
+	int iWidth = 1024;
+	int iDrawPaillrWidth = g_AllFields.size()*m_iBold;// 柱子需要宽度
+	int iControlWidth = 80;
+	CWnd* pWnd = GetDlgItem(IDC_SettingOwner);
+	CRect rcControl;
+	if (pWnd != nullptr&&pWnd->GetSafeHwnd())
+	{
+		pWnd->GetWindowRect(rcControl);
+		iControlWidth = rcControl.Width();
+	}
+	iWidth = m_iLeftStartX + iDrawPaillrWidth + iControlWidth;
+	CRect rcClient;
+	GetWindowRect(rcClient);
+	rcClient.right = rcClient.left + iWidth;
+	MoveWindow(rcClient);
+	if (pWnd != nullptr&&pWnd->GetSafeHwnd())
+	{
+		//ScreenToClient(rcClient);
+		rcControl.SetRect(rcClient.right - iControlWidth, rcClient.top, rcClient.right, rcClient.top + rcControl.Height());
+		pWnd->MoveWindow(rcControl);
+	}
+}
+
+void CValueInverstingDlg::CalBold()
+{
+	int iDrawRealPailrCounts = m_config.assetCategories.size() + m_config.liabilityCategories.size();// 2个区间放三个
+	int iControlWidth = 80;
+	CWnd* pWnd = GetDlgItem(IDC_SettingOwner);
+	CRect rcControl;
+	CRect rcClient;
+	GetWindowRect(rcClient);
+	if (pWnd != nullptr&&pWnd->GetSafeHwnd())
+	{
+		pWnd->GetWindowRect(rcControl);
+		iControlWidth = rcControl.Width();
+	}
+	int iDrawWidth = rcClient.Width() - m_iLeftStartX - iControlWidth - 30;
+	m_iBold = iDrawWidth/ (iDrawRealPailrCounts-1)-10;//10 为柱子宽度
+	if (m_iBold < 15)
+		m_iBold = 15;
+}
+
+void CValueInverstingDlg::DefalutConfig()
+{
+	m_config.assetCategories.clear();
+	m_config.liabilityCategories.clear();
+	// ==================== 资产类 ====================
+	// 现金
+	m_config.assetCategories.push_back({ "现金", {"cash", "settlement_reserve", "trading_financial_assets"} });
+	// 应收款
+	m_config.assetCategories.push_back({ "应收款", {"notes_receivable", "accounts_receivable", "receivables_financing", "other_receivables", "reverse_repurchase_agreements"} });
+	// 预付款
+	m_config.assetCategories.push_back({ "预付款", {"prepayments"} });
+	// 存货
+	m_config.assetCategories.push_back({ "存货", {"inventories"} });
+	// 其他流动性资产
+	m_config.assetCategories.push_back({ "其他流动性资产", {"non_current_assets_due_within_one_year", "other_current_assets"} });
+	// 长期投资
+	m_config.assetCategories.push_back({ "长期投资", {"debt_investments", "long_term_receivables", "long_term_equity_investments"} });
+	// 固定资产
+	m_config.assetCategories.push_back({ "固定资产", {"fixed_assets", "construction_in_progress"} });
+	// 无形资产 & 商誉
+	m_config.assetCategories.push_back({ "无形资产&商誉", {"biological_assets", "right_of_use_assets", "intangible_assets", "goodwill"} });
+	// 其他非流动性资产
+	m_config.assetCategories.push_back({ "其他非流动性资产", {"long_term_deferred_expenses", "deferred_tax_assets", "other_non_current_assets"} });
+
+	// ==================== 负债类 ====================
+	// 短期借款
+	m_config.liabilityCategories.push_back({ "短期借款", {"short_term_borrowings", "non_current_liabilities_due_within_one_year"} });
+	// 应付款
+	m_config.liabilityCategories.push_back({ "应付款", {"notes_payable", "accounts_payable", "other_payables"} });
+	// 预收款
+	m_config.liabilityCategories.push_back({ "预收款", {"advance_from_customers", "contract_liabilities"} });
+	// 薪酬 & 税
+	m_config.liabilityCategories.push_back({ "薪酬&税", {"employee_benefits_payable", "taxes_payable"} });
+	// 其他流动性负债
+	m_config.liabilityCategories.push_back({ "其他流动性负债", {"non_current_liabilities_due_within_one_year", "other"} });
+	// 长期借款
+	m_config.liabilityCategories.push_back({ "长期借款", {"long_term_borrowings", "bonds_payable"} });
+	// 其他非流动性负债
+	m_config.liabilityCategories.push_back({ "其他非流动性负债", {"lease_liabilities", "long_term_accounts_payable", "deferred_tax_liabilities", "other_non_current_liabilities"} });
+	RebuildFieldMappings();
+}
+
 void CValueInverstingDlg::OnSettings()
 {
 	CSettingBalanceSheetDlg dlg;
 	dlg.SetConfig(&m_config);   // 传入配置引用
 	if (dlg.DoModal() == IDOK) {
-		SaveConfig();
-		ApplyConfigToMaps();
+		m_config = dlg.SaveConfig();
+		CalBold();// 重新计算config 距离
 		RebuildFieldMappings();
+		ApplyConfigToMaps();
+		InitDebtVal();
 		InitMaxMin();
 		Invalidate();
 	}
@@ -162,6 +250,8 @@ int CValueInverstingDlg::ReadJsonFile() {
 void CValueInverstingDlg::InitDebtValVis()
 {
 	// 后续将m_mpxx 的值合并到m_vNameValue中
+	m_mpValVis.clear();
+	m_mpDebtVis.clear();
 	for (auto&[key1, value1] : m_mpVal)
 	{
 		for (auto&[key2, value2] : value1)
@@ -205,30 +295,6 @@ void CValueInverstingDlg::InitDebtValVis()
 
 // 在 InitDebtVal 中调用
 void CValueInverstingDlg::InitDebtVal() {
-	// 清空并初始化结构（所有值为 0.0）
-	m_mpVal.clear();
-	m_mpDebt.clear();
-
-	// 资产类
-	m_mpVal.insert({ "现金", map<CString, double>{ {"cash",0.0},{"settlement_reserve",0.0},{"trading_financial_assets",0.0}} });
-	m_mpVal.insert({ "应收款", map<CString, double>{ {"notes_receivable",0.0},{"accounts_receivable",0.0},{"receivables_financing",0.0},{"other_receivables",0.0},{"reverse_repurchase_agreements",0.0}} });
-	m_mpVal.insert({ "预付款", map<CString, double>{ {"prepayments",0.0}} });
-	m_mpVal.insert({ "存货", map<CString, double>{ {"inventories",0.0}} });
-	m_mpVal.insert({ "其他流动性资产", map<CString, double>{ {"non_current_assets_due_within_one_year",0.0},{"other_current_assets",0.0}} });
-	m_mpVal.insert({ "长期投资", map<CString, double>{ {"debt_investments",0.0},{"long_term_receivables",0.0},{"long_term_equity_investments",0.0}} });
-	m_mpVal.insert({ "固定资产", map<CString, double>{ {"fixed_assets",0.0},{"construction_in_progress",0.0}} });
-	m_mpVal.insert({ "无形资产&商誉", map<CString, double>{ {"biological_assets",0.0},{"right_of_use_assets",0.0},{"intangible_assets",0.0},{"goodwill",0.0}} });
-	m_mpVal.insert({ "其他非流动性资产", map<CString, double>{ {"long_term_deferred_expenses",0.0},{"deferred_tax_assets",0.0},{"other_non_current_assets",0.0}} });
-
-	// 负债类
-	m_mpDebt.insert({ "短期借款", map<CString, double>{ {"short_term_borrowings",0.0},{"non_current_liabilities_due_within_one_year",0.0}} });
-	m_mpDebt.insert({ "应付款", map<CString, double>{ {"notes_payable",0.0},{"accounts_payable",0.0},{"other_payables",0.0}} });
-	m_mpDebt.insert({ "预收款", map<CString, double>{ {"advance_from_customers",0.0},{"contract_liabilities",0.0}} });
-	m_mpDebt.insert({ "薪酬&税", map<CString, double>{ {"employee_benefits_payable",0.0},{"taxes_payable",0.0}} });
-	m_mpDebt.insert({ "其他流动性负债", map<CString, double>{ {"non_current_liabilities_due_within_one_year",0.0},{"other",0.0}} });
-	m_mpDebt.insert({ "长期借款", map<CString, double>{ {"long_term_borrowings",0.0},{"bonds_payable",0.0}} });
-	m_mpDebt.insert({ "其他非流动性负债", map<CString, double>{ {"lease_liabilities",0.0},{"long_term_accounts_payable",0.0},{"deferred_tax_liabilities",0.0},{"other_non_current_liabilities",0.0}} });
-	//Json 读取
 	ReadJsonFile();
 	// 资产和负债的可视化初始化
 	InitDebtValVis();
@@ -308,6 +374,7 @@ BEGIN_MESSAGE_MAP(CValueInverstingDlg, CDialogEx)
 	ON_WM_MOUSELEAVE()
 	ON_COMMAND(ID_FILE_OPEN, &CValueInverstingDlg::OnFileOpen)
 	ON_BN_CLICKED(IDC_SettingOwner, &CValueInverstingDlg::OnBnClickedSettingowner)
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -371,8 +438,6 @@ void CValueInverstingDlg::ApplyConfigToMaps()
 		// 此处填充你代码中的默认结构，并同步到 m_config
 		// 略...
 	}
-
-	InitDebtValVis();  // 重建可视化数据
 }
 
 void CValueInverstingDlg::RebuildFieldMappings()
@@ -509,9 +574,6 @@ BOOL CValueInverstingDlg::OnInitDialog()
 	{
 		SetMenu(&m_menu);
 	}
-	SetWindowTitle("BydBalanceSheet2025");
-	InitDebtVal();
-	InitMaxMin();
 	CClientDC dc(this);
 	CFont* pOldFont = dc.SelectObject(GetFont());
 	CString strCursorContext;
@@ -520,8 +582,17 @@ BOOL CValueInverstingDlg::OnInitDialog()
 	strCursorContext.Format("%.2f亿", m_dbMax);
 	if (m_iLeftLinePosx < dc.GetTextExtent(strCursorContext).cx)
 		m_iLeftLinePosx = dc.GetTextExtent(strCursorContext).cx;
-	m_iLeftStartX = m_iLeftLinePosx+40;
+	m_iLeftStartX = m_iLeftLinePosx + 40;
 	dc.SelectObject(pOldFont);
+	SetWindowTitle("BydBalanceSheet2025");
+	DefalutConfig();
+	CalWindowSize();
+	CalBold();
+	// 清空并初始化结构（所有值为 0.0）
+	ApplyConfigToMaps();
+	InitDebtVal();
+	InitMaxMin();
+
 	LOGFONT lf = { 0 };
 	InitFont(&lf);
 	m_font.CreateFontIndirect(&lf);
@@ -702,13 +773,23 @@ void CValueInverstingDlg::OnPaint()
 	m_rcDraw = rcClient;
 	m_rcDraw.left = m_iLeftLinePosx;
 	m_rcDraw.bottom = iBottom;
+	CWnd* pWnd = GetDlgItem(IDC_SettingOwner);
+	if(pWnd&&pWnd->GetSafeHwnd())
+	{
+		CRect rcControl;
+		pWnd->GetWindowRect(rcControl);
+		ScreenToClient(rcControl);
+		if(!rcControl.IsRectEmpty())
+			m_rcDraw.right = rcControl.left - 1;
+	}
 	DrawLineDot(dc);
 	DrawLeftCursor(dc);
 	CPen pen(PS_SOLID,1,RGB(110,112,121));
 	CPen* pOldPen = dc.SelectObject(&pen);
 	dc.MoveTo(m_iLeftLinePosx, 0);
 	dc.LineTo(m_iLeftLinePosx, iBottom);
-	dc.LineTo(rcClient.right, iBottom);
+	dc.LineTo(m_rcDraw.right, iBottom);
+	dc.LineTo(m_rcDraw.right, m_rcDraw.top);
 	int iBold = m_iBold;
 	int iLeft = m_iLeftStartX;
 	int iMaxHeightPillar = static_cast<int>(iBottom * 0.8f);
@@ -882,4 +963,17 @@ void CValueInverstingDlg::OnBnClickedSettingowner()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	OnSettings();
+}
+
+void CValueInverstingDlg::Relayout()
+{
+
+}
+
+void CValueInverstingDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+	Relayout();
+	Invalidate();
+	// TODO: 在此处添加消息处理程序代码
 }

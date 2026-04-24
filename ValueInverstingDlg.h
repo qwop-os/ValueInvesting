@@ -44,6 +44,10 @@ public:
 	void ApplyConfigToMaps();   // 根据配置重建 m_mpVal / m_mpDebt 结构
 	void RebuildFieldMappings();
 	void OnSettings();
+	void DefalutConfig();		// 初始化m_config默认值
+	void Relayout();
+	void CalWindowSize();
+	void CalBold();
 public:
 	BalanceSheetConfig m_config;
 	std::map<CString, CString> m_assetFieldToCategory;
@@ -85,7 +89,7 @@ private:
 	CRect m_rcOldLeftCursor;
 	int m_iRealWidthPillar{ 10 };
 	int m_iLeftStartX{ 40 };
-	int m_iBold{ 46 };
+	int m_iBold{ 25 };
 	CString m_strTitle;
 	CString m_strTips;
 	CString m_strLeftCursor;
@@ -97,4 +101,5 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnMouseLeave();
 	afx_msg void OnBnClickedSettingowner();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
