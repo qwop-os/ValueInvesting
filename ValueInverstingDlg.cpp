@@ -10,8 +10,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <filesystem>
+#include <atlconv.h>
 #include "json.hpp"
 #include "SettingBalanceSheetDlg.h"
+
 using namespace std;
 using json = nlohmann::json;
 #ifdef _DEBUG
@@ -189,6 +192,68 @@ void CValueInverstingDlg::OnSettings()
 	}
 }
 
+int CValueInverstingDlg::WriteJsonFile(json& data)
+{
+	try {
+		// 1. 获取 exe 所在目录（比 current_path 更可靠）
+		TCHAR exeFullPath[MAX_PATH];
+		::GetModuleFileName(NULL, exeFullPath, MAX_PATH);
+		std::filesystem::path exeDir = std::filesystem::path(exeFullPath).parent_path();
+
+		// 2. 确保 DataJson 子目录存在
+		std::filesystem::path dataDir = exeDir / L"DataJson";
+		if (!std::filesystem::exists(dataDir)) {
+			std::filesystem::create_directory(dataDir);
+		}
+
+		// 3. 生成文件名：
+		std::string filename;
+		if (data.contains("balance_sheet")) //
+		{
+			// CString → 窄字符串（多字节字符集下 CT2A 按当前代码页转换）
+			std::string utf8_name = data["balance_sheet"].value("company_name", json(nullptr)).get<std::string>();
+			CStringW strWCompanyName(CA2W(utf8_name.c_str(), CP_UTF8));  // 临时宽字符 CString
+			CString strCompanyName(CW2A(strWCompanyName, CP_ACP));      // 转为 ANSI (GBK) 多字节环境下CString = CStringA
+			utf8_name = data["balance_sheet"].value("company_code", json(nullptr)).get<std::string>();
+			CStringW strWCompanyCode(CA2W(utf8_name.c_str(), CP_UTF8));
+			CString strCompanyCode(CW2A(strWCompanyCode, CP_ACP));
+			utf8_name = data["balance_sheet"].value("report_date", json(nullptr)).get<std::string>();
+			CStringW strWReportDate(CA2W(utf8_name.c_str(), CP_UTF8));
+			CString strCompanyReportDate(CW2A(strWReportDate, CP_ACP));
+
+			strCompanyReportDate.Replace(_T("-"), _T(""));//2025-12-31 ->20251231;
+
+			strCompanyCode += "_"+ strCompanyReportDate+"_"+strCompanyName;
+
+			filename = std::string(CT2A(strCompanyCode)) + ".json";
+		}
+		else 
+		{
+			filename = "data.json";
+		}
+
+		std::filesystem::path filePath = dataDir / filename;
+		if (std::filesystem::exists(filePath)) {
+			return 1;
+		}
+		// 4. 写入 JSON 文件（带缩进格式化）
+		std::ofstream file(filePath);
+		if (!file.is_open()) {
+			std::cerr << "无法创建文件：" << filePath << std::endl;
+			return 0;
+		}
+		file << data.dump();   
+		file.close();
+
+		return 1;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "写入 JSON 文件异常：" << e.what() << std::endl;
+		return 0;
+	}
+	return 1;
+}
+
 // 修改后的 ReadJsonFile 函数
 int CValueInverstingDlg::ReadJsonFile() {
 	CString strfile = m_strTitle + ".json";
@@ -355,6 +420,7 @@ BEGIN_MESSAGE_MAP(CValueInverstingDlg, CDialogEx)
 	ON_WM_ERASEBKGND()
 	ON_WM_MOUSELEAVE()
 	ON_COMMAND(ID_FILE_OPEN, &CValueInverstingDlg::OnFileOpen)
+	ON_COMMAND(ID_DownJson, &CValueInverstingDlg::OnFileOpen)
 	ON_BN_CLICKED(IDC_SettingOwner, &CValueInverstingDlg::OnBnClickedSettingowner)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BUTTON1, &CValueInverstingDlg::OnBnClickedButton1)
@@ -462,22 +528,6 @@ void CValueInverstingDlg::SaveConfig()
 
 void CValueInverstingDlg::LoadData(CString strFilePath)
 {
-	// 1. 将所有数值重置为 0.0
-	for (auto& outer : m_mpVal)
-	{
-		for (auto& inner : outer.second)
-		{
-			inner.second = 0.0;
-		}
-	}
-	for (auto& outer : m_mpDebt)
-	{
-		for (auto& inner : outer.second)
-		{
-			inner.second = 0.0;
-		}
-	}
-
 	// 2. 从 JSON 文件读取并更新数值
 	ifstream file(strFilePath);
 	if (!file.is_open())
@@ -504,35 +554,20 @@ void CValueInverstingDlg::LoadData(CString strFilePath)
 		AfxMessageBox(_T("JSON 中缺少 'balance_sheet' 节点"));
 		return;
 	}
+	ResetData(data);
+}
 
-	traverse_and_update(data["balance_sheet"], _T("balance_sheet"));
+void CValueInverstingDlg::OnDownJsonFile()
+{
+	m_comboxDate.EnableWindow(FALSE);
+	m_editCode.EnableWindow(FALSE);
+	m_Query.EnableWindow(FALSE);
 
-	// 3. 重新生成可视化数据并更新最大值/最小值
-	// 对m_mpValVis、m_mpDebtVis置零
-	for (auto& outer : m_mpValVis)
-	{
-		outer.second = 0.0;
-	}
-	for (auto& outer : m_mpDebtVis)
-	{
-		outer.second = 0.0;
-	}
+	m_conn;
 
-	InitDebtValVis();   // 填充 m_mpValVis, m_mpDebtVis, m_vNameValue
-	InitMaxMin();       // 重新计算 m_dbMax, m_dbMin
-	CClientDC dc(this);
-	CFont* pOldFont = dc.SelectObject(GetFont());
-	CString strCursorContext;
-	strCursorContext = "9999.99亿";
-	m_iLeftLinePosx = dc.GetTextExtent(strCursorContext).cx;
-	strCursorContext.Format("%.2f亿", m_dbMax);
-	if(m_iLeftLinePosx< dc.GetTextExtent(strCursorContext).cx)
-		m_iLeftLinePosx = dc.GetTextExtent(strCursorContext).cx;
-	m_iLeftStartX = m_iLeftLinePosx + 40;
-	dc.SelectObject(pOldFont);
-	// 4. 刷新窗口
-	Invalidate();
-	UpdateWindow();
+	m_comboxDate.EnableWindow(TRUE);
+	m_editCode.EnableWindow(TRUE);
+	m_Query.EnableWindow(TRUE);
 }
 
 void CValueInverstingDlg::OnFileOpen()
@@ -1030,6 +1065,14 @@ void CValueInverstingDlg::OnBnClickedButton1()
 		return;
 	}
 	json j = m_conn.Connect(strCode.GetBuffer(), strDate.GetBuffer());
+	if (!j.contains("balance_sheet"))
+	{
+		MessageBox("客服端连接服务端失败", "提示", MB_OK);
+		m_comboxDate.EnableWindow(TRUE);
+		m_editCode.EnableWindow(TRUE);
+		m_Query.EnableWindow(TRUE);
+		return;
+	}
 	if (j["balance_sheet"] == nullptr)
 	{
 		CString strErrInfo;
@@ -1040,6 +1083,41 @@ void CValueInverstingDlg::OnBnClickedButton1()
 		m_Query.EnableWindow(TRUE);
 		return;
 	}
+
+	ResetData(j);
+
+	std::string utf8_name = j["balance_sheet"].value("company_name", json(nullptr)).get<std::string>();
+	CStringW strW(CA2W(utf8_name.c_str(), CP_UTF8));  // 临时宽字符 CString
+	CString strCompanyName(CW2A(strW, CP_ACP));      // 转为 ANSI (GBK) 多字节环境下CString = CStringA
+	strCompanyName += strDate+"资产负债表";
+	SetWindowTitle(strCompanyName);
+
+	WriteJsonFile(j);
+
+	m_comboxDate.EnableWindow(TRUE);
+	m_editCode.EnableWindow(TRUE);
+	m_Query.EnableWindow(TRUE);
+
+}
+
+void CValueInverstingDlg::ResetData(json& j)
+{
+	// 1. 将所有数值重置为 0.0
+	for (auto& outer : m_mpVal)
+	{
+		for (auto& inner : outer.second)
+		{
+			inner.second = 0.0;
+		}
+	}
+	for (auto& outer : m_mpDebt)
+	{
+		for (auto& inner : outer.second)
+		{
+			inner.second = 0.0;
+		}
+	}
+
 	traverse_and_update(j["balance_sheet"], _T("balance_sheet"));
 
 	// 3. 重新生成可视化数据并更新最大值/最小值
@@ -1068,8 +1146,21 @@ void CValueInverstingDlg::OnBnClickedButton1()
 	// 4. 刷新窗口
 	Invalidate();
 	UpdateWindow();
-	m_comboxDate.EnableWindow(TRUE);
-	m_editCode.EnableWindow(TRUE);
-	m_Query.EnableWindow(TRUE);
+}
 
+BOOL CValueInverstingDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+	{
+		CWnd* pFocus = GetFocus();
+		if (pFocus && pFocus->GetSafeHwnd() == m_editCode.GetSafeHwnd())
+		{
+			// 模拟点击按钮
+			CWnd* pBtn = GetDlgItem(IDC_BUTTON1);
+			if (pBtn && ::IsWindow(pBtn->m_hWnd))
+				pBtn->SendMessage(BM_CLICK, 0, 0);
+			return TRUE;   // 已处理，不再传递
+		}
+	}
+	return CDialogEx::PreTranslateMessage(pMsg);
 }

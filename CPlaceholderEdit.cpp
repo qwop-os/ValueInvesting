@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "CPlaceholderEdit.h"
-
+#include "Resource.h"
 
 IMPLEMENT_DYNAMIC(CPlaceholderEdit, CEdit)
 

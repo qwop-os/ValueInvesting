@@ -20,18 +20,19 @@
 #define IDC_BUTTON_Save                 1012
 #define IDC_BUTTON_SaveOk               1012
 #define IDC_BUTTON1                     1013
-#define IDC_EDIT1                       1014
 #define IDC_COMBO1                      1015
 #define ID_32771                        32771
 #define ID_Menu                         32772
 #define ID_32773                        32773
+#define ID_32774                        32774
+#define ID_DownJson                     32775
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        138
-#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_COMMAND_VALUE         32776
 #define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

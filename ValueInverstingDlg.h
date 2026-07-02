@@ -30,6 +30,7 @@ public:
 	void InitMaxMin();
 	double GetValueByPoint(CPoint pt);
 	CString GetNameByPoint(CPoint pt);
+	int WriteJsonFile(json& data);
 	int ReadJsonFile();
 	void traverse_and_update(const json& j, const CString& path);
 	void SetWindowTitle(CString strTitle);
@@ -49,6 +50,8 @@ public:
 	void Relayout();
 	void CalWindowSize();
 	void CalBold();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	void ResetData(json& j);
 public:
 	BalanceSheetConfig m_config;
 	std::map<CString, CString> m_assetFieldToCategory;
@@ -73,6 +76,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnFileOpen();          // 响应“打开文件”命令
+	afx_msg void OnDownJsonFile();		// 响应下载默认的Json 文件
 	DECLARE_MESSAGE_MAP()
 private:
 	map<CString,map<CString,double>>m_mpDebt;
