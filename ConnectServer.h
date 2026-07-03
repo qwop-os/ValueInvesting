@@ -9,4 +9,5 @@ class ConnectServer
 public:
 	ConnectServer();
 	json Connect(std::string strCode, std::string strDate);
+	void SendJsonToServer(const json& data);
 };

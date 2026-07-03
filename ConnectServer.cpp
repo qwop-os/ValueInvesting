@@ -73,3 +73,67 @@ json ConnectServer::Connect(std::string strCode, std::string strDate)
 	WSACleanup();
 	return j;
 }
+
+// 向服务端发送 JSON 数据（上传）
+void ConnectServer::SendJsonToServer(const json& data)
+{
+	// 仅当有 balance_sheet 节点且 data_available 为 true 时才上传
+	if (!data.contains("balance_sheet") ||
+		!data["balance_sheet"].value("data_available", false))
+	{
+		//AfxMessageBox(_T("该 JSON 不包含有效财报数据，未上传"));
+		return;
+	}
+
+	std::string uploadStr = "UPLOAD:" + data.dump();
+
+	CString serverIP = "114.55.110.120";  
+	int port = 8888;
+
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		//AfxMessageBox(_T("网络初始化失败"));
+		return;
+	}
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock == INVALID_SOCKET) {
+		WSACleanup();
+		//AfxMessageBox(_T("创建套接字失败"));
+		return;
+	}
+
+	struct sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port);
+	inet_pton(AF_INET, CT2A(serverIP), &serverAddr.sin_addr);
+
+	if (connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+		closesocket(sock);
+		WSACleanup();
+		//AfxMessageBox(_T("连接服务器失败"));
+		return;
+	}
+
+	// 发送上传数据
+	int sent = send(sock, uploadStr.c_str(), uploadStr.size(), 0);
+	if (sent == SOCKET_ERROR) {
+		closesocket(sock);
+		WSACleanup();
+		//AfxMessageBox(_T("数据发送失败"));
+		return;
+	}
+
+	// 接收服务端响应
+	char buffer[512] = { 0 };
+	int bytes = recv(sock, buffer, sizeof(buffer) - 1, 0);
+	//if (bytes > 0) {
+	//	std::string response(buffer, bytes);
+	//	CString msg;
+	//	msg.Format(_T("服务器响应: %s"), CA2W(response.c_str(), CP_UTF8));
+	//	AfxMessageBox(msg);
+	//}
+
+	closesocket(sock);
+	WSACleanup();
+}

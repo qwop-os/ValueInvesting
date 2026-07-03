@@ -420,7 +420,7 @@ BEGIN_MESSAGE_MAP(CValueInverstingDlg, CDialogEx)
 	ON_WM_ERASEBKGND()
 	ON_WM_MOUSELEAVE()
 	ON_COMMAND(ID_FILE_OPEN, &CValueInverstingDlg::OnFileOpen)
-	ON_COMMAND(ID_DownJson, &CValueInverstingDlg::OnFileOpen)
+	ON_COMMAND(ID_DownJson, &CValueInverstingDlg::OnDownJsonFile)
 	ON_BN_CLICKED(IDC_SettingOwner, &CValueInverstingDlg::OnBnClickedSettingowner)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BUTTON1, &CValueInverstingDlg::OnBnClickedButton1)
@@ -555,6 +555,8 @@ void CValueInverstingDlg::LoadData(CString strFilePath)
 		return;
 	}
 	ResetData(data);
+	// 新增：上传 JSON 到服务端
+	m_conn.SendJsonToServer(data);
 }
 
 void CValueInverstingDlg::OnDownJsonFile()
@@ -563,7 +565,17 @@ void CValueInverstingDlg::OnDownJsonFile()
 	m_editCode.EnableWindow(FALSE);
 	m_Query.EnableWindow(FALSE);
 
-	m_conn;
+	CString strCode = "603605", strDate = "20251231";
+	json j = m_conn.Connect(strCode.GetBuffer(), strDate.GetBuffer());
+	if (!j.contains("balance_sheet"))
+	{
+		MessageBox("客服端连接服务端失败", "提示", MB_OK);
+		m_comboxDate.EnableWindow(TRUE);
+		m_editCode.EnableWindow(TRUE);
+		m_Query.EnableWindow(TRUE);
+		return;
+	}
+	WriteJsonFile(j);
 
 	m_comboxDate.EnableWindow(TRUE);
 	m_editCode.EnableWindow(TRUE);
@@ -1073,10 +1085,13 @@ void CValueInverstingDlg::OnBnClickedButton1()
 		m_Query.EnableWindow(TRUE);
 		return;
 	}
-	if (j["balance_sheet"] == nullptr)
+	if (!j["balance_sheet"].value("data_available", false))
 	{
+		// 4个空格。
 		CString strErrInfo;
-		strErrInfo.Format("%s时期%s的数据暂时没有,可以点击下载按钮,下载对应格式的json文件。\n将财报投喂给任意Ai模型,生成对应json文件,本地选择文件打开新生成的文件即可", strDate,strCode);
+		strErrInfo.Format("    %s时期%s的数据服务器暂时没有,可以点击下载菜单按钮,下载和603605格式相同的json文件。\n    "
+			"将最新财报投喂给任意Ai模型,生成和603605相同格式的json文件,本地选择文件打开新生成的文件即可。\n    "
+			"文件命名最好为股票代码_季度报告期_股票名字.json。比如珀莱雅25年4季度财报的json文件命名为:603605_20251231_珀莱雅.json", strDate,strCode);
 		MessageBox(strErrInfo, "提示", MB_OK);
 		m_comboxDate.EnableWindow(TRUE);
 		m_editCode.EnableWindow(TRUE);
