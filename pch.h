@@ -7,14 +7,13 @@
 #ifndef PCH_H
 #define PCH_H
 
-// 添加要在此处预编译的标头
 #include "framework.h"
 #include <gdiplus.h>
 #include <afxcontrolbars.h>
+#include <vector>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
-#include <vector>
-#include <afxcontrolbars.h>
+
 // 单个一级类别配置
 struct CategoryItem {
 	CString name;                   // 一级显示名称（用户自定义）

@@ -1076,7 +1076,47 @@ void CValueInverstingDlg::OnBnClickedButton1()
 		m_Query.EnableWindow(TRUE);
 		return;
 	}
-	json j = m_conn.Connect(strCode.GetBuffer(), strDate.GetBuffer());
+
+	// 优先加载本地json
+	json j;
+	bool bLoadedFromLocal = false;
+	// 获取 exe 所在目录的 DataJson 子目录
+	TCHAR exeFullPath[MAX_PATH];
+	::GetModuleFileName(NULL, exeFullPath, MAX_PATH);
+	std::filesystem::path exeDir = std::filesystem::path(exeFullPath).parent_path();
+	std::filesystem::path dataDir = exeDir / L"DataJson";
+
+	if (std::filesystem::exists(dataDir))
+	{
+		std::string code = CT2A(strCode);
+		std::string date = CT2A(strDate);
+		std::string prefix = code + "_" + date + "_";   // 文件名前缀，例如 "603605_20251231_"
+
+		for (const auto& entry : std::filesystem::directory_iterator(dataDir))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".json")
+			{
+				std::string fname = entry.path().filename().string();
+				// 文件名以 "股票代码_日期_" 开头
+				if (fname.size() > prefix.size() && fname.compare(0, prefix.size(), prefix) == 0)
+				{
+					std::ifstream file(entry.path());
+					if (file.is_open())
+					{
+						try
+						{
+							file >> j;
+							bLoadedFromLocal = true;
+						}
+						catch (...) { continue; }  // 文件损坏，继续尝试下一个
+						break;
+					}
+				}
+			}
+		}
+	}
+	if(!bLoadedFromLocal)// 本地不存在
+		j = m_conn.Connect(strCode.GetBuffer(), strDate.GetBuffer());
 	if (!j.contains("balance_sheet"))
 	{
 		MessageBox("客服端连接服务端失败", "提示", MB_OK);
