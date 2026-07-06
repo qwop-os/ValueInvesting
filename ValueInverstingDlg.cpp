@@ -582,6 +582,30 @@ void CValueInverstingDlg::OnDownJsonFile()
 	m_Query.EnableWindow(TRUE);
 }
 
+void CValueInverstingDlg::ResetControlByFileName(CString strFileName)
+{
+	// 1. 按 "_" 分割，提取第二个字段（报告期）
+	int firstUnderscore = strFileName.Find('_');
+	if (firstUnderscore == -1)
+		return;                     // 格式不符，直接返回
+	int secondUnderscore = strFileName.Find('_', firstUnderscore + 1);
+	if (secondUnderscore == -1)
+		return;                     // 格式不符
+
+	CString strCode = strFileName.Mid(0, firstUnderscore);
+
+	CString strReportDate = strFileName.Mid(firstUnderscore + 1,
+		secondUnderscore - firstUnderscore - 1);
+
+	// 2. 在 ComboBox 中精确查找报告期
+	int index = m_comboxDate.FindStringExact(-1, strReportDate);
+	if (index != CB_ERR)            // CB_ERR 表示未找到
+		m_comboxDate.SetCurSel(index);
+
+	// 3. 更新编辑框m_editCode
+	m_editCode.SetWindowText(strCode);
+}
+
 void CValueInverstingDlg::OnFileOpen()
 {
 	CFileDialog dlg(TRUE, _T("json"), NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
@@ -590,6 +614,7 @@ void CValueInverstingDlg::OnFileOpen()
 	{
 		CString strFilePath = dlg.GetPathName();
 		CString strTitle = dlg.GetFileTitle();
+		ResetControlByFileName(strTitle);
 		SetWindowTitle(strTitle);
 		LoadData(strFilePath);
 		// 强制重绘标题栏和菜单栏

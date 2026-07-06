@@ -52,6 +52,7 @@ public:
 	void CalBold();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void ResetData(json& j);
+	void ResetControlByFileName(CString strFileName);// 读取文件名字，重新设置edit，combox
 public:
 	BalanceSheetConfig m_config;
 	std::map<CString, CString> m_assetFieldToCategory;
